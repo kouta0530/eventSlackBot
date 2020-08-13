@@ -13,6 +13,9 @@ slack_events_adapter = SlackEventAdapter(os.environ.get("SLACK_EVENTS_TOKEN"), "
 # Initialize a Web API client
 slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
 
+
+
+
 def flip_coin(channel):
     """Craft the CoinBot, flip the coin and send the message to the channel
     """
@@ -24,6 +27,19 @@ def flip_coin(channel):
 
     # Post the onboarding message in Slack
     slack_web_client.chat_postMessage(**message)
+
+from flask import request,Response
+import json
+
+@app.route("/",methods = ["POST"])
+def test():
+    data = request.data.decode("utf-8")
+    data = json.loads(data)
+
+    if "challenge" in data:
+        token = token = str(data['challenge'])
+        return Response(token, mimetype='text/plane')
+    return 0
 
 """
 # When a 'message' event is detected by the events adapter, forward that payload
@@ -78,4 +94,4 @@ if __name__ == "__main__":
 
     # Run our app on our externally facing IP address on port 3000 instead of
     # running it on localhost, which is traditional for development.
-    app.run()
+    app.run("https://botchang0226.herokuapp.com/",3000)
