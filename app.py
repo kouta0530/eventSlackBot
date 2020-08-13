@@ -4,6 +4,7 @@ from flask import Flask
 from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 from coinbot import CoinBot
+from plugin import search
 
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
@@ -12,7 +13,6 @@ slack_events_adapter = SlackEventAdapter(os.environ.get("SLACK_EVENTS_TOKEN"), "
 
 # Initialize a Web API client
 slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
-
 
 
 
@@ -30,7 +30,6 @@ def flip_coin(channel):
 
 from flask import request,Response
 import json
-
 @app.route("/",methods = ["POST"])
 def test():
     data = request.data.decode("utf-8")
@@ -66,8 +65,8 @@ def message(payload):
         # Execute the flip_coin function and send the results of
         # flipping a coin to the channel
         return flip_coin(channel_id)
-
 """
+
 @slack_events_adapter.on("message")
 def handle_message(event_data):
     message = event_data["event"]
@@ -80,7 +79,10 @@ def handle_message(event_data):
         channel = message["channel"]
         message = "今日は...わからない"
         slack_web_client.chat_postMessage(channel=channel, text=message)
-
+    if message.get("subtype") is None and "ニュース" in message.get('text'):
+        channel = message["channel"]
+        message = search.get_news()
+        slack_web_client.chat_postMessage(channel=channel, text=message)
 
 if __name__ == "__main__":
     # Create the logging object
