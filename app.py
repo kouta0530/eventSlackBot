@@ -94,4 +94,4 @@ if __name__ == "__main__":
 
     # Run our app on our externally facing IP address on port 3000 instead of
     # running it on localhost, which is traditional for development.
-    app.run("https://botchang0226.herokuapp.com/",3000)
+    app.run()
