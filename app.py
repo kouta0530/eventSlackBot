@@ -99,7 +99,7 @@ def handle_message(event_data):
         channel = message["channel"]
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-    if message.get("message").get("subtype") is "message_replied":
+    if message.get("subtype") is "message_replied":
         channel = message["channel"]
         messages = "hello world"#'message["root"]["text]"'
         return slack_web_client.chat_postMessage(channel=channel,text=messages)
