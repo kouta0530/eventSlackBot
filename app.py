@@ -7,6 +7,7 @@ from coinbot import CoinBot
 from plugin import search
 
 
+
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
 # Create an events adapter and register it to an endpoint in the slack app for event injestion.
@@ -75,19 +76,20 @@ def handle_message(event_data):
     if message.get("subtype") is None and "hi" in message.get('text'):
         channel = message["channel"]
         message = "Hello <@%s>! :tada:" % message["user"]
-        slack_web_client.chat_postMessage(channel=channel, text=message)
+        return slack_web_client.chat_postMessage(channel=channel, text=message)
+
     if message.get("subtype") is None and "天気" in message.get('text'):
         channel = message["channel"]
         message = "今日は...わからない"
-        slack_web_client.chat_postMessage(channel=channel, text=message)
+        return slack_web_client.chat_postMessage(channel=channel, text=message)
     if message.get("subtype") is None and "ニュース" in message.get('text'):
         channel = message["channel"]
         message = search.get_news()
-        slack_web_client.chat_postMessage(channel=channel, text=message)
+        return slack_web_client.chat_postMessage(channel=channel, text=message)
     if message.get("subtype") is "thread_broadcast" and "ブックマーク" in message.get("text"):
         channel = message["channel"]
         message = message["root"]["text"]
-        slack_web_client.chat_postMessage(channel=channel,text=message)
+        return slack_web_client.chat_postMessage(channel=channel,text=message)
 
 
 
