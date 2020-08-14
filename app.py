@@ -71,6 +71,7 @@ def message(payload):
 
 @slack_events_adapter.on("message")
 def handle_message(event_data):
+    print(event_data)
     message = event_data["event"]
     # If the incoming message contains "hi", then respond with a "Hello" message
     if message.get("subtype") is None and "hi" in message.get('text'):
@@ -89,7 +90,6 @@ def handle_message(event_data):
     if message.get("subtype") is "thread_broadcast" and "ブックマーク" in message.get("text"):
         channel = message["channel"]
         messages = "hello world"#'message["root"]["text]"'
-        print(message["root"])
         return slack_web_client.chat_postMessage(channel=channel,text=messages)
 
 
