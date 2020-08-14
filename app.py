@@ -88,8 +88,9 @@ def handle_message(event_data):
         return slack_web_client.chat_postMessage(channel=channel, text=message)
     if message.get("subtype") is "thread_broadcast" and "ブックマーク" in message.get("text"):
         channel = message["channel"]
-        message = message["root"]["text"]
-        return slack_web_client.chat_postMessage(channel=channel,text=message)
+        messages = "hello world"#'message["root"]["text]"'
+        print(message["root"])
+        return slack_web_client.chat_postMessage(channel=channel,text=messages)
 
 
 
