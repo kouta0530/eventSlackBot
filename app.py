@@ -98,7 +98,7 @@ def handle_message(event_data):
         channel = message["channel"]
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-    if "ブックマーク"　in message.get("text"):
+    if  "ブックマーク" in message.get('text'):
         channel = message["channel"]
         return slack_web_client.chat_postMessage(channel=channel,text=message)
 
