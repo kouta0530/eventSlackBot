@@ -6,6 +6,7 @@ from slackeventsapi import SlackEventAdapter
 from coinbot import CoinBot
 from plugin import search
 
+
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
 # Create an events adapter and register it to an endpoint in the slack app for event injestion.
@@ -83,6 +84,13 @@ def handle_message(event_data):
         channel = message["channel"]
         message = search.get_news()
         slack_web_client.chat_postMessage(channel=channel, text=message)
+    if message.get("subtype") is "thread_broadcast" and "ブックマーク" in message.get("text"):
+        channel = message["channel"]
+        message = message["root"]["text"]
+        slack_web_client.chat_postMessage(channel=channel,text=message)
+
+
+
 
 if __name__ == "__main__":
     # Create the logging object
