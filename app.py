@@ -5,11 +5,13 @@ from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 from coinbot import CoinBot
 from plugin import search
-
+from models import PosDB
 
 
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
+#model = PosDB.PosDB()
+
 # Create an events adapter and register it to an endpoint in the slack app for event injestion.
 slack_events_adapter = SlackEventAdapter(os.environ.get("SLACK_EVENTS_TOKEN"), "/slack/events", app)
 
@@ -71,8 +73,18 @@ def message(payload):
 
 @slack_events_adapter.on("message")
 def handle_message(event_data):
-    print(event_data)
     message = event_data["event"]
+
+    if(message.get("text") != None):
+        words = message.get("text")
+
+        """
+        for word in words:
+            model.setcursor()
+            model.command("insert into words values(word)")
+
+        """
+
     # If the incoming message contains "hi", then respond with a "Hello" message
     if message.get("subtype") is None and "hi" in message.get('text'):
         channel = message["channel"]
@@ -87,7 +99,7 @@ def handle_message(event_data):
         channel = message["channel"]
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-    if message.get("message").get("subtype") is "thread_broadcast" and "ブックマーク" in message.get("message").get("text"):
+    if message.get("message").get("subtype") is "thread_broadcast":
         channel = message["channel"]
         messages = "hello world"#'message["root"]["text]"'
         return slack_web_client.chat_postMessage(channel=channel,text=messages)
