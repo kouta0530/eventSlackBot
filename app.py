@@ -84,7 +84,6 @@ def handle_message(event_data):
             model.command("insert into words values(word)")
 
         """
-
     # If the incoming message contains "hi", then respond with a "Hello" message
     if message.get("subtype") is None and "hi" in message.get('text'):
         channel = message["channel"]
@@ -99,10 +98,9 @@ def handle_message(event_data):
         channel = message["channel"]
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-    if message.get("subtype") is "message_replied":
-        channel = message["channel"]
-        messages = "hello world"#'message["root"]["text]"'
-        return slack_web_client.chat_postMessage(channel=channel,text=messages)
+    
+    channel = message["channel"]
+    return slack_web_client.chat_postMessage(channel=channel,text=message)
 
 
 
