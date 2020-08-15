@@ -101,7 +101,7 @@ def handle_message(event_data):
     if  "ブックマーク" in message.get('text'):
         channel = message["channel"]
         words = wordGet.mecab()
-        return slack_web_client.chat_postMessage(channel=channel,text=words[0])
+        return slack_web_client.chat_postMessage(channel=channel,text=words)
 
 
 @slack_events_adapter.on("reaction_added")
