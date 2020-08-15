@@ -86,12 +86,12 @@ def handle_message(event_data):
         from plugin import search
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-    if  "ブックマーク" in message.get('text'):
+    if message.get("subtype") is None and "ブックマーク" in message.get('text'):
         channel = message["channel"]
         
         from plugin import wordGet
         word = wordGet.mecab()
-        return slack_web_client.chat_postMessage(channel=channel,text=word)
+        return slack_web_client.chat_postMessage(channel=channel,text=word[0])
 
 
 @slack_events_adapter.on("reaction_added")
