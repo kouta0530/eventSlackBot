@@ -105,9 +105,14 @@ def handle_message(event_data):
 
 @slack_events_adapter.on("reaction_added")
 def bookMark(event_data):
-    channel = event_data["event"]["item"]["channel"]
+    item = event_data["event"]["item"]
+    
+    channel = item["channel"]
+    ts = item["ts"]
 
-    return slack_web_client.chat_postMessage(channel=channel,text = event_data["event"])
+    data = slack_web_client.conversations_replies(channel = channel,ts = ts)
+
+    return slack_web_client.chat_postMessage(channel=channel,text = data)
 
 
 
