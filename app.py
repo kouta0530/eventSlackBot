@@ -88,10 +88,6 @@ def handle_message(event_data):
         return slack_web_client.chat_postMessage(channel=channel, text=message)
 
         
-        from plugin import wordGet
-        
-        word = wordGet.mecab()
-        return slack_web_client.chat_postMessage(channel=channel,text=word[0])
 
 
 @slack_events_adapter.on("reaction_added")
