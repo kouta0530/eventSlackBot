@@ -2,8 +2,6 @@
 def mecab():
     from janome.tokenizer import Tokenizer
     t = Tokenizer()
-    malist = t.tokenize("今日の天気は晴れです")
+    malist = t.tokenize("今日の天気は晴れです",wakati= True)
     
-    word = [n.surface for n in malist]
-
-    return word
+    return malist
