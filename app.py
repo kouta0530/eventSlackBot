@@ -5,6 +5,7 @@ from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 from coinbot import CoinBot
 from plugin import search
+from plugin import wordGet
 from models import PosDB
 
 
@@ -77,7 +78,6 @@ def handle_message(event_data):
 
     if(message.get("text") != None):
         words = message.get("text")
-
         """
         for word in words:
             model.setcursor()
@@ -100,7 +100,8 @@ def handle_message(event_data):
         return slack_web_client.chat_postMessage(channel=channel, text=message)
     if  "ブックマーク" in message.get('text'):
         channel = message["channel"]
-        return slack_web_client.chat_postMessage(channel=channel,text=event_data)
+        words = wordGet.mecab()
+        return slack_web_client.chat_postMessage(channel=channel,text=words)
 
 
 @slack_events_adapter.on("reaction_added")
