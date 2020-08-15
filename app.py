@@ -18,17 +18,6 @@ slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
 
 
 
-def flip_coin(channel):
-    """Craft the CoinBot, flip the coin and send the message to the channel
-    """
-    # Create a new CoinBot
-    coin_bot = CoinBot(channel)
-
-    # Get the onboarding message payload
-    message = coin_bot.get_message_payload()
-
-    # Post the onboarding message in Slack
-    slack_web_client.chat_postMessage(**message)
 
 from flask import request,Response
 import json
