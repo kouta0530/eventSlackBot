@@ -3,8 +3,6 @@ import logging
 from flask import Flask
 from slack import WebClient
 from slackeventsapi import SlackEventAdapter
-from coinbot import CoinBot
-from plugin import search
 from models import PosDB
 
 
@@ -95,6 +93,8 @@ def handle_message(event_data):
         return slack_web_client.chat_postMessage(channel=channel, text=message)
     if message.get("subtype") is None and "ニュース" in message.get('text'):
         channel = message["channel"]
+
+        from plugin import search
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
     if  "ブックマーク" in message.get('text'):
