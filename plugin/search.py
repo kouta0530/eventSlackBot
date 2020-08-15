@@ -14,3 +14,14 @@ def get_news():
     """
 
     return news
+
+def get_news_list():
+    res = requests.get("https://www.itmedia.co.jp/")
+    soup = BeautifulSoup(res.text,"html.parser")
+
+    content = soup.find("div",{"class":"colBoxOuter"})
+    
+    news = [t.find("h3").find("a").get("href") for t in content.find_all("div",{"class":"colBoxTitle"})]
+    news = [soup.find("h3").find("a").get("href")]
+
+    return news

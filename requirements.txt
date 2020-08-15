@@ -6,4 +6,4 @@ gunicorn==20.0.4
 bs4==0.0.1
 requests==2.23.0
 psycopg2==2.8.5
-mecab==0.996
+mecab-python3
