@@ -110,10 +110,8 @@ def bookMark(event_data):
     channel = item["channel"]
     ts = item["ts"]
 
-    data = slack_web_client.conversations_history(channel=channel)
-    slack_web_client.chat_postMessage(channel=channel,text = "hello world")
 
-    return slack_web_client.chat_postMessage(channel=channel,text = data)
+    return slack_web_client.chat_postMessage(channel=channel,text = item)
 
 
 
