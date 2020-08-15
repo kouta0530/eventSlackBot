@@ -5,7 +5,7 @@ from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 from coinbot import CoinBot
 from plugin import search
-from plugin import wordGet
+#from plugin import wordGet
 from models import PosDB
 
 
