@@ -5,6 +5,7 @@ from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 from PosDB import PosDB
 from plugin import search
+from plugin import wordGet
 
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
@@ -40,7 +41,7 @@ slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
 
 host = os.environ.get("HOST")
 dbname = os.environ.get("DBNAME")
-user = os.environ.get("USER")
+users = os.environ.get("USER")
 password = os.environ.get("PASS")
 port = int(os.environ.get("PORT"))
 url = os.environ.get("DB_URL")
@@ -51,13 +52,39 @@ def handle_message(event_data):
     message = event_data["event"]
     if message.get("bot_id") is None:
         channel = message["channel"]
+        wordlist = wordGet.mecab(message.get('text'))
+        pos_db = PosDB(host,dbname,users,password,port,url)
+        pos_db.set_cursor()
+        for i in wordlist:
+            sql_words = "insert into words (word) select '%s' where not exists (select * from words where word = '%s')" % (i,i)
+            pos_db.insert_command(sql_words)
+        pos_db.close()
+
+        if message.get('text') == "おこのみ":
+            sql_words = "select word from words"
+            pos_db = PosDB(host,dbname,users,password,port,url)
+            pos_db.set_cursor()
+            result = pos_db.select_command(sql_words)
+            pos_db.close()
+
+            menthion = [i["word"] for i in result]
+            newsList = search.get_news_list()
+            
+            for i in newsList:
+                text = search.filter_search(i)
+                word = wordGet.mecab(text)
+                if search.compare_words(menthion,word):
+                    return slack_web_client.chat_postMessage(channel=channel,text = i)
+
+            return slack_web_client.chat_postMessage(channel=channel,text="ありませんでした")
+
         if message.get('text') == "ニュース" and message.get("thread_ts") is None:
             botmessage = search.get_news()
             slack_web_client.chat_postMessage(channel=channel, text=botmessage)
             return 0
         if message.get('text') is not None and message.get('text').startswith('ブックマーク') and message.get("thread_ts") is None:
             user = message["user"]
-            pos_db = PosDB(host,dbname,user,password,port,url)
+            pos_db = PosDB(host,dbname,users,password,port,url)
             pos_db.set_cursor()
             if message.get('text') != 'ブックマーク' and (message.get('text').find(' ') or message.get('text').find('　')):
                 sql_news = "select * from news where tag = '%s'" % message.get('text').replace('　','')[6:]
@@ -98,7 +125,7 @@ def handle_message(event_data):
                 user = message["user"]
                 link = history_top['text']
                 sql_news = "insert into news (news_address, users_id) select '%s','%s' where not exists (select * from news where news_address = '%s' and users_id = '%s')" %(link, user, link, user)
-                pos_db = PosDB(host,dbname,user,password,port,url)
+                pos_db = PosDB(host,dbname,users,password,port,url)
                 pos_db.set_cursor()
                 pos_db.insert_command(sql_news)
                 if message.get('text') != 'ブックマーク' and (message.get('text').find(' ') or message.get('text').find('　')):
@@ -156,8 +183,6 @@ def error_handler(err):
 if __name__ == "__main__":
     # Create the logging object
     logger = logging.getLogger()
-    
-    print(host,dbname,user,password,port)
 
     # Set the log level to DEBUG. This will increase verbosity of logging messages
     logger.setLevel(logging.DEBUG)

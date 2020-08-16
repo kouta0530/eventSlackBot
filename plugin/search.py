@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+import random
 
 def get_news():
     res = requests.get("https://www.itmedia.co.jp/")
@@ -8,12 +9,10 @@ def get_news():
     content = soup.find("div",{"class":"colBoxOuter"})
     news = content.find("div",{"class":"colBoxTitle"}).find("h3").find("a").get("href")
     
-    """
     news = [t.find("h3").find("a").get("href") for t in content.find_all("div",{"class":"colBoxTitle"})]
-    news = [soup.find("h3").find("a").get("href")]
-    """
+    random.shuffle(news)
 
-    return news
+    return news[0]
 
 def get_news_list():
     res = requests.get("https://www.itmedia.co.jp/")
