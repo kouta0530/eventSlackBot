@@ -78,10 +78,13 @@ def handle_message(event_data):
 
             return slack_web_client.chat_postMessage(channel=channel,text="ありませんでした")
 
+
         if message.get('text') == "ニュース" and message.get("thread_ts") is None:
             botmessage = search.get_news()
-            slack_web_client.chat_postMessage(channel=channel, text=botmessage)
-            return 0
+            return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+            
+
+
         if message.get('text') is not None and message.get('text').startswith('ブックマーク') and message.get("thread_ts") is None:
             user = message["user"]
             pos_db = PosDB(host,dbname,users,password,port,url)
@@ -90,20 +93,48 @@ def handle_message(event_data):
                 sql_news = "select * from news where tag = '%s'" % message.get('text').replace('　','')[6:]
                 result = pos_db.select_command(sql_news)
                 pos_db.close()
-                for value in result:
-                    slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
-                botmessage = "タグ:%s のリンク一覧だよ" % message.get('text').replace('　','')[6:]
-                slack_web_client.chat_postMessage(channel=channel, text=botmessage)
-                return 0
+                if len(result)==0:
+                    botmessage = "タグ:'%s' のタグはまだ付けられてないよ" % message.get('text').replace('　','')[6:]
+                    return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                else:
+                    for value in result:
+                        slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
+                    botmessage = "タグ:%s のリンク一覧だよ" % message.get('text').replace('　','')[6:]
+                    return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                    
             else:
                 sql_news = "SELECT * FROM news where users_id = '%s'" % user
                 result = pos_db.select_command(sql_news)
                 pos_db.close()
+                if len(result)==0:
+                    botmessage = "まだあなたが登録した記事はないよ"
+                    return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                else:
+                    for value in result:
+                        slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
+                    botmessage = "あなたの好みの記事を取得したよ"
+                    return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                    
+
+
+        if message.get('text') is not None and message.get('text').startswith('おすすめ') and message.get("thread_ts") is None:
+            user = message["user"]
+            pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432,url)
+            pos_db.set_cursor()
+            sql_news = "SELECT * FROM news where not users_id = '%s'" % user
+            result = pos_db.select_command(sql_news)
+            pos_db.close()
+            if len(result)==0:
+                botmessage = "まだ他の人はお気に入りにしてないなあ"
+                return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+            else:
                 for value in result:
                     slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
-                botmessage = "あなたのお気に入りを取得したよ"
-                slack_web_client.chat_postMessage(channel=channel, text=botmessage)
-                return 0
+                botmessage = "みんなはこんな記事をお気に入りしてるよ"
+                return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                
+            
+            
         if message.get("thread_ts") is not None: #botの投稿以外かつスレッドの投稿のみに反応
             thread_ts = message["thread_ts"]
             history_top = slack_web_client.conversations_replies(ts= thread_ts ,channel = channel)['messages'][0]
@@ -133,13 +164,12 @@ def handle_message(event_data):
                     pos_db.insert_command(sql_news)
                     pos_db.close()
                     botmessage = "タグをつけたよ"
-                    slack_web_client.chat_postMessage(thread_ts=thread_ts, channel=channel, text=botmessage)
-                    return 0
+                    return slack_web_client.chat_postMessage(thread_ts=thread_ts, channel=channel, text=botmessage)
                 else:
                     pos_db.close()
                     botmessage = "お気に入りにしたよ"
-                    slack_web_client.chat_postMessage(thread_ts=thread_ts, channel=channel, text=botmessage)
-                    return 0
+                    return slack_web_client.chat_postMessage(thread_ts=thread_ts, channel=channel, text=botmessage)
+                    
             '''
             if "挿入テスト" in message.get('text'):
                 sql = "insert into test (url,tag) values ('%s','%s')" % (message.get('text'), message.get('text'))
