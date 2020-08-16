@@ -39,13 +39,17 @@ def handle_message(event_data):
         pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432)
         pos_db.set_cursor()
         for i in wordlist:
-            sql_words = "insert into word (word) select '%s' where not exists (select * from news where word = '%s')" % i
+            sql_words = "insert into word (word) select '%s' where not exists (select * from word where word = '%s')" % (i, i)
             pos_db.insert_command(sql_words)
         pos_db.close()
+
+
         if message.get('text') == "ニュース" and message.get("thread_ts") is None:
             botmessage = search.get_news()
             slack_web_client.chat_postMessage(channel=channel, text=botmessage)
             return 0
+
+
         if message.get('text') is not None and message.get('text').startswith('ブックマーク') and message.get("thread_ts") is None:
             user = message["user"]
             pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432)
@@ -54,20 +58,48 @@ def handle_message(event_data):
                 sql_news = "select * from news where tag = '%s'" % message.get('text').replace('　','')[6:]
                 result = pos_db.select_command(sql_news)
                 pos_db.close()
-                for value in result:
-                    slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
-                botmessage = "タグ:%s のリンク一覧だよ" % message.get('text').replace('　','')[6:]
-                slack_web_client.chat_postMessage(channel=channel, text=botmessage)
-                return 0
+                if len(result)==0:
+                    botmessage = "タグ:'%s' のタグはまだ付けられてないよ" % message.get('text').replace('　','')[6:]
+                    slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                else:
+                    for value in result:
+                        slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
+                    botmessage = "タグ:%s のリンク一覧だよ" % message.get('text').replace('　','')[6:]
+                    slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                    return 0
             else:
                 sql_news = "SELECT * FROM news where users_id = '%s'" % user
                 result = pos_db.select_command(sql_news)
                 pos_db.close()
+                if len(result)==0:
+                    botmessage = "まだあなたが登録したブックマークはないよ　URLのスレッドに「ブックマーク」と話しかけてみてね"
+                    slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                else:
+                    for value in result:
+                        slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
+                    botmessage = "あなたのブックマークを取得したよ"
+                    slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+                    return 0
+
+
+        if message.get('text') is not None and message.get('text').startswith('おすすめ') and message.get("thread_ts") is None:
+            user = message["user"]
+            pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432)
+            pos_db.set_cursor()
+            sql_news = "SELECT * FROM news where not users_id = '%s'" % user
+            result = pos_db.select_command(sql_news)
+            pos_db.close()
+            if len(result)==0:
+                botmessage = "まだ他の人はブックマークしてないなあ"
+                slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+            else:
                 for value in result:
                     slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
-                botmessage = "あなたのブックマークを取得したよ"
+                botmessage = "みんなはこんなニュースをブックマークしてるよ"
                 slack_web_client.chat_postMessage(channel=channel, text=botmessage)
                 return 0
+            
+            
         if message.get("thread_ts") is not None: #botの投稿以外かつスレッドの投稿のみに反応
             thread_ts = message["thread_ts"]
             history_top = slack_web_client.conversations_replies(ts= thread_ts ,channel = channel)['messages'][0]
