@@ -52,7 +52,8 @@ def handle_message(event_data):
     message = event_data["event"]
     
 
-
+    if request.headers.get("X-Slack-Retry-Num"):
+        return {"statusCode":200,"body":""}
 
     if message.get("bot_id") is None:
         channel = message["channel"]
@@ -79,6 +80,7 @@ def handle_message(event_data):
                 text = search.filter_search(i)
                 word = wordGet.mecab(text)
                 if search.compare_words(menthion,word):
+                    slack_web_client.chat_postMessage(channel=channel,text="好みの記事を見つけたよ")
                     return slack_web_client.chat_postMessage(channel=channel,text = i)
 
             return slack_web_client.chat_postMessage(channel=channel,text="ありませんでした")
@@ -117,7 +119,7 @@ def handle_message(event_data):
                 else:
                     for value in result:
                         slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
-                    botmessage = "あなたの好みの記事を取得したよ"
+                    botmessage = "あなたがお気に入りにしている記事を取得したよ"
                     return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
                     
 
