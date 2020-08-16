@@ -3,14 +3,20 @@ import logging
 from flask import Flask
 from slack import WebClient
 from slackeventsapi import SlackEventAdapter
-from coinbot import CoinBot
-from plugin import search
 from models import PosDB
-
+from memory_profiler import profile
 
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
-#model = PosDB.PosDB()
+
+
+#ここローカルでの実験用
+from os.path import join, dirname
+from dotenv import load_dotenv
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path,encoding="utf-8_sig")
+#本番はherokuの環境変数
 
 # Create an events adapter and register it to an endpoint in the slack app for event injestion.
 slack_events_adapter = SlackEventAdapter(os.environ.get("SLACK_EVENTS_TOKEN"), "/slack/events", app)
@@ -20,33 +26,23 @@ slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
 
 
 
-def flip_coin(channel):
-    """Craft the CoinBot, flip the coin and send the message to the channel
-    """
-    # Create a new CoinBot
-    coin_bot = CoinBot(channel)
-
-    # Get the onboarding message payload
-    message = coin_bot.get_message_payload()
-
-    # Post the onboarding message in Slack
-    slack_web_client.chat_postMessage(**message)
-
 from flask import request,Response
 import json
+
 @app.route("/",methods = ["POST"])
 def test():
     data = request.data.decode("utf-8")
     data = json.loads(data)
-
     if "challenge" in data:
-        token = token = str(data['challenge'])
+        token = str(data['challenge'])
         return Response(token, mimetype='text/plane')
     return 0
 
-"""
+
+
 # When a 'message' event is detected by the events adapter, forward that payload
 # to this function.
+"""
 @slack_events_adapter.on("message")
 def message(payload):
     #Parse the message event, and if the activation string is in the text,
@@ -76,43 +72,39 @@ def handle_message(event_data):
     message = event_data["event"]
 
     if(message.get("text") != None):
-        words = message.get("text")
+        text = message.get("text")
+        from plugin import wordGet
+        words = wordGet.mecab(text)
 
         """
         for word in words:
             model.setcursor()
-            model.command("insert into words values(word)")
-
+            model.command("insert into words values(word);")
         """
     # If the incoming message contains "hi", then respond with a "Hello" message
     if message.get("subtype") is None and "hi" in message.get('text'):
         channel = message["channel"]
         message = "Hello <@%s>! :tada:" % message["user"]
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-
     if message.get("subtype") is None and "天気" in message.get('text'):
         channel = message["channel"]
         message = "今日は...わからない"
         return slack_web_client.chat_postMessage(channel=channel, text=message)
     if message.get("subtype") is None and "ニュース" in message.get('text'):
         channel = message["channel"]
+        from plugin import search
         message = search.get_news()
         return slack_web_client.chat_postMessage(channel=channel, text=message)
-    if  "ブックマーク" in message.get('text'):
-        channel = message["channel"]
-        return slack_web_client.chat_postMessage(channel=channel,text=event_data)
+
+        
 
 
 @slack_events_adapter.on("reaction_added")
 def bookMark(event_data):
-    item = event_data["event"]["item"]
-    
+    item = event_data["event"]["item"]    
     channel = item["channel"]
-    ts = item["ts"]
 
-    data = slack_web_client.conversations_replies(channel=channel,ts=ts)
-
-    return slack_web_client.chat_postMessage(channel=channel,text = data)
+    return slack_web_client.chat_postMessage(channel=channel,text="hello")
 
 
 
@@ -125,7 +117,6 @@ if __name__ == "__main__":
 
     # Add the StreamHandler as a logging handler
     logger.addHandler(logging.StreamHandler())
-
     # Run our app on our externally facing IP address on port 3000 instead of
     # running it on localhost, which is traditional for development.
-    app.run()
+    app.run(port = 80)
