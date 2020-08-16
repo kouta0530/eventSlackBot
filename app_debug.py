@@ -6,6 +6,7 @@ from slackeventsapi import SlackEventAdapter
 from coinbot import CoinBot
 from PosDB import PosDB
 from plugin import search
+from plugin import wordGet
 
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
@@ -34,6 +35,13 @@ def handle_message(event_data):
     message = event_data["event"]
     if message.get("bot_id") is None:
         channel = message["channel"]
+        wordlist = wordGet.mecab(message.get('text'))
+        pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432)
+        pos_db.set_cursor()
+        for i in wordlist:
+            sql_words = "insert into word (word) select '%s' where not exists (select * from news where word = '%s')" % i
+            pos_db.insert_command(sql_words)
+        pos_db.close()
         if message.get('text') == "ニュース" and message.get("thread_ts") is None:
             botmessage = search.get_news()
             slack_web_client.chat_postMessage(channel=channel, text=botmessage)
