@@ -50,8 +50,13 @@ url = os.environ.get("DB_URL")
 @slack_events_adapter.on("message")
 def handle_message(event_data):
     message = event_data["event"]
+    
+
+
+
     if message.get("bot_id") is None:
         channel = message["channel"]
+        """
         wordlist = wordGet.mecab(message.get('text'))
         pos_db = PosDB(host,dbname,users,password,port,url)
         pos_db.set_cursor()
@@ -59,7 +64,7 @@ def handle_message(event_data):
             sql_words = "insert into words (word) select '%s' where not exists (select * from words where word = '%s')" % (i,i)
             pos_db.insert_command(sql_words)
         pos_db.close()
-
+        """
         if message.get('text') == "おこのみ":
             sql_words = "select word from words"
             pos_db = PosDB(host,dbname,users,password,port,url)
