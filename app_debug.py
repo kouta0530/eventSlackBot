@@ -10,6 +10,7 @@ from plugin import wordGet
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
 
+"""
 #ここローカルでの実験用
 from os.path import join, dirname
 from dotenv import load_dotenv
@@ -17,9 +18,10 @@ from dotenv import load_dotenv
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path,encoding="utf-8_sig")
 #本番はherokuの環境変数
-
+"""
 
 from flask import request,Response
+"""
 import json
 @app.route("/",methods = ["POST"])
 def test():
@@ -30,7 +32,7 @@ def test():
         token = token = str(data['challenge'])
         return Response(token, mimetype='text/plane')
     return 0
-
+"""
 # Create an events adapter and register it to an endpoint in the slack app for event injestion.
 slack_events_adapter = SlackEventAdapter(os.environ.get("SLACK_EVENTS_TOKEN"), "/slack/events", app)
 
@@ -39,18 +41,13 @@ slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
 
 
 
-host = os.environ.get("HOST")
-dbname = os.environ.get("DBNAME")
-users = os.environ.get("USER")
-password = os.environ.get("PASS")
-port = int(os.environ.get("PORT"))
+
 url = os.environ.get("DB_URL")
 
 #作ったテーブル：create table news(id serial primary key, news_address text, users_id varchar(20), tag varchar(100));
 @slack_events_adapter.on("message")
 def handle_message(event_data):
     message = event_data["event"]
-    
 
     if request.headers.get("X-Slack-Retry-Num"):
         return {"statusCode":200,"body":""}
@@ -68,14 +65,15 @@ def handle_message(event_data):
         """
         if message.get('text') == "おこのみ":
             sql_words = "select word from words"
-            pos_db = PosDB(host,dbname,users,password,port,url)
+            pos_db = PosDB(url)
             pos_db.set_cursor()
             result = pos_db.select_command(sql_words)
             pos_db.close()
 
+
             menthion = [i["word"] for i in result]
             newsList = search.get_news_list()
-            
+
             for i in newsList:
                 text = search.filter_search(i)
                 word = wordGet.mecab(text)
@@ -94,7 +92,7 @@ def handle_message(event_data):
 
         if message.get('text') is not None and message.get('text').startswith('ブックマーク') and message.get("thread_ts") is None:
             user = message["user"]
-            pos_db = PosDB(host,dbname,users,password,port,url)
+            pos_db = PosDB(url)
             pos_db.set_cursor()
             if message.get('text') != 'ブックマーク' and (message.get('text').find(' ') or message.get('text').find('　')):
                 sql_news = "select * from news where tag = '%s'" % message.get('text').replace('　','')[6:]
@@ -126,7 +124,7 @@ def handle_message(event_data):
 
         if message.get('text') is not None and message.get('text').startswith('おすすめ') and message.get("thread_ts") is None:
             user = message["user"]
-            pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432,url)
+            pos_db = PosDB(url)
             pos_db.set_cursor()
             sql_news = "SELECT * FROM news where not users_id = '%s'" % user
             result = pos_db.select_command(sql_news)
@@ -163,7 +161,7 @@ def handle_message(event_data):
                 user = message["user"]
                 link = history_top['text']
                 sql_news = "insert into news (news_address, users_id) select '%s','%s' where not exists (select * from news where news_address = '%s' and users_id = '%s')" %(link, user, link, user)
-                pos_db = PosDB(host,dbname,users,password,port,url)
+                pos_db = PosDB(url)
                 pos_db.set_cursor()
                 pos_db.insert_command(sql_news)
                 if message.get('text') != 'ブックマーク' and (message.get('text').find(' ') or message.get('text').find('　')):

@@ -2,7 +2,7 @@ import psycopg2
 import psycopg2.extras
 
 class PosDB:
-    def __init__(self,host,dbname,user,password,port,url):
+    def __init__(self,url):
         self.conn = psycopg2.connect(url)
 
     def set_cursor(self):
