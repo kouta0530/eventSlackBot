@@ -2,7 +2,7 @@
 
 「SlaReco」はSlack上にニュースをレコメンドしてくれるアプリケーションです．
 
-![](https://github.com/kouta0530/eventSlackBot/materials/damy.jpg)
+![frontimage](https://github.com/kouta0530/eventSlackBot/tree/master/materials/demo5.png)
 
 ## Features
 
