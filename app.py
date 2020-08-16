@@ -30,7 +30,6 @@ from flask import request,Response
 import json
 
 @app.route("/",methods = ["POST"])
-@profile
 def test():
     data = request.data.decode("utf-8")
     data = json.loads(data)
@@ -69,7 +68,6 @@ def message(payload):
 """
 
 @slack_events_adapter.on("message")
-@profile
 def handle_message(event_data):
     message = event_data["event"]
 
@@ -77,7 +75,6 @@ def handle_message(event_data):
         text = message.get("text")
         from plugin import wordGet
         words = wordGet.mecab(text)
-        print(words)
 
         """
         for word in words:
@@ -103,7 +100,6 @@ def handle_message(event_data):
 
 
 @slack_events_adapter.on("reaction_added")
-@profile
 def bookMark(event_data):
     item = event_data["event"]["item"]    
     channel = item["channel"]
