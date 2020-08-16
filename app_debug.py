@@ -101,7 +101,7 @@ def handle_message(event_data):
                 pos_db.close()
                 for value in result:
                     slack_web_client.chat_postMessage(channel=channel, text=value['news_address'])
-                botmessage = "あなたのブックマークを取得したよ"
+                botmessage = "あなたのお気に入りを取得したよ"
                 slack_web_client.chat_postMessage(channel=channel, text=botmessage)
                 return 0
         if message.get("thread_ts") is not None: #botの投稿以外かつスレッドの投稿のみに反応
@@ -137,7 +137,7 @@ def handle_message(event_data):
                     return 0
                 else:
                     pos_db.close()
-                    botmessage = "ブックマークしたよ"
+                    botmessage = "お気に入りにしたよ"
                     slack_web_client.chat_postMessage(thread_ts=thread_ts, channel=channel, text=botmessage)
                     return 0
             '''
