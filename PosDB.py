@@ -2,8 +2,8 @@ import psycopg2
 import psycopg2.extras
 
 class PosDB:
-    def __init__(self,host,dbname,user,password,port):
-        self.conn = psycopg2.connect(host = host,dbname = dbname,user = user,password = password,port = port)
+    def __init__(self,host,dbname,user,password,port,url):
+        self.conn = psycopg2.connect(url)
 
     def set_cursor(self):
         self.cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -26,7 +26,4 @@ class PosDB:
         self.cur.close()
         self.conn.close()
     
-
-    
-
 

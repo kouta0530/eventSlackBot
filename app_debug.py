@@ -3,12 +3,20 @@ import logging
 from flask import Flask
 from slack import WebClient
 from slackeventsapi import SlackEventAdapter
-from coinbot import CoinBot
 from PosDB import PosDB
 from plugin import search
 
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
+
+#ここローカルでの実験用
+from os.path import join, dirname
+from dotenv import load_dotenv
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path,encoding="utf-8_sig")
+#本番はherokuの環境変数
+
 
 from flask import request,Response
 import json
@@ -28,6 +36,15 @@ slack_events_adapter = SlackEventAdapter(os.environ.get("SLACK_EVENTS_TOKEN"), "
 # Initialize a Web API client
 slack_web_client = WebClient(token=os.environ.get("SLACK_TOKEN"))
 
+
+
+host = os.environ.get("HOST")
+dbname = os.environ.get("DBNAME")
+user = os.environ.get("USER")
+password = os.environ.get("PASS")
+port = int(os.environ.get("PORT"))
+url = os.environ.get("DB_URL")
+
 #作ったテーブル：create table news(id serial primary key, news_address text, users_id varchar(20), tag varchar(100));
 @slack_events_adapter.on("message")
 def handle_message(event_data):
@@ -40,7 +57,7 @@ def handle_message(event_data):
             return 0
         if message.get('text') is not None and message.get('text').startswith('ブックマーク') and message.get("thread_ts") is None:
             user = message["user"]
-            pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432)
+            pos_db = PosDB(host,dbname,user,password,port,url)
             pos_db.set_cursor()
             if message.get('text') != 'ブックマーク' and (message.get('text').find(' ') or message.get('text').find('　')):
                 sql_news = "select * from news where tag = '%s'" % message.get('text').replace('　','')[6:]
@@ -81,7 +98,7 @@ def handle_message(event_data):
                 user = message["user"]
                 link = history_top['text']
                 sql_news = "insert into news (news_address, users_id) select '%s','%s' where not exists (select * from news where news_address = '%s' and users_id = '%s')" %(link, user, link, user)
-                pos_db = PosDB("localhost", "slackbot", "postgres", "postgres", 5432)
+                pos_db = PosDB(host,dbname,user,password,port,url)
                 pos_db.set_cursor()
                 pos_db.insert_command(sql_news)
                 if message.get('text') != 'ブックマーク' and (message.get('text').find(' ') or message.get('text').find('　')):
@@ -139,6 +156,8 @@ def error_handler(err):
 if __name__ == "__main__":
     # Create the logging object
     logger = logging.getLogger()
+    
+    print(host,dbname,user,password,port)
 
     # Set the log level to DEBUG. This will increase verbosity of logging messages
     logger.setLevel(logging.DEBUG)
@@ -148,5 +167,5 @@ if __name__ == "__main__":
 
     # Run our app on our externally facing IP address on port 3000 instead of
     # running it on localhost, which is traditional for development.
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
 

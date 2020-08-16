@@ -47,7 +47,8 @@ def compare_words(yourmentions,news):
             return 1
 
     return 0
-
+"""
 news = get_news_list()
 content = filter_search(news[0])
 print(compare_words(["Google","ポケモン","トランプ"],content))
+"""
