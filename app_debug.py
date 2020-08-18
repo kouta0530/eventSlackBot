@@ -54,15 +54,15 @@ def handle_message(event_data):
 
     if message.get("bot_id") is None:
         channel = message["channel"]
-        """
+
         wordlist = wordGet.mecab(message.get('text'))
-        pos_db = PosDB(host,dbname,users,password,port,url)
+        pos_db = PosDB(url)
         pos_db.set_cursor()
         for i in wordlist:
             sql_words = "insert into words (word) select '%s' where not exists (select * from words where word = '%s')" % (i,i)
             pos_db.insert_command(sql_words)
         pos_db.close()
-        """
+
         if message.get('text') == "おこのみ":
             sql_words = "select word from words"
             pos_db = PosDB(url)
