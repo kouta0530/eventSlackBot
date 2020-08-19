@@ -207,11 +207,18 @@ def reaction_added(event_data):
     user = event["user"]
     channel = event["item"]["channel"]
     ts = event["item"]["ts"]
-
     history_top = slack_web_client.conversations_replies(ts= ts ,channel = channel)['messages'][0]["text"]
 
-
-    return slack_web_client.chat_postMessage(channel=channel, text="test")
+    if history_top.startswith("<http"):
+        sql_news = "insert into news (news_address, users_id) select '%s','%s' where not exists (select * from news where news_address = '%s' and users_id = '%s')" %(history_top, user, history_top, user)
+        pos_db = PosDB(url)
+        pos_db.set_cursor()
+        pos_db.insert_command(sql_news)
+        pos_db.close()
+        botmessage = "お気に入りにしたよ"
+        return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+    else:
+        return slack_web_client.chat_postMessage(channel=channel, text="それはお気に入りにできないよ")
 
 # Error events
 @slack_events_adapter.on("error")
