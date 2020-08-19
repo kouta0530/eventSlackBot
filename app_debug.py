@@ -10,7 +10,7 @@ from plugin import wordGet
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
 
-"""
+
 #ここローカルでの実験用
 from os.path import join, dirname
 from dotenv import load_dotenv
@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path,encoding="utf-8_sig")
 #本番はherokuの環境変数
-"""
+
 
 from flask import request,Response
 """
@@ -200,15 +200,18 @@ def handle_message(event_data):
 # Example reaction emoji echo
 @slack_events_adapter.on("reaction_added")
 def reaction_added(event_data):
+    if request.headers.get("X-Slack-Retry-Num"):
+        return {"statusCode":200,"body":""}
+
     event = event_data["event"]
-    #emoji = event["reaction"]
+    user = event["user"]
     channel = event["item"]["channel"]
-    #eventitem = event["item"]
-    #text = ":%s:" % emoji
-    #if eventitem.get("bot_id") is None:
-        #slack_web_client.chat_postMessage(channel=channel, text=text)
-    slack_web_client.chat_postMessage(channel=channel, text=event_data)
-    return 0
+    ts = event["item"]["ts"]
+
+    history_top = slack_web_client.conversations_replies(ts= ts ,channel = channel)['messages'][0]["text"]
+
+
+    return slack_web_client.chat_postMessage(channel=channel, text="test")
 
 # Error events
 @slack_events_adapter.on("error")
