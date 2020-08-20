@@ -11,6 +11,7 @@ from plugin import wordGet
 app = Flask(__name__)
 
 
+"""
 #ここローカルでの実験用
 from os.path import join, dirname
 from dotenv import load_dotenv
@@ -18,7 +19,7 @@ from dotenv import load_dotenv
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path,encoding="utf-8_sig")
 #本番はherokuの環境変数
-
+"""
 
 from flask import request,Response
 """
