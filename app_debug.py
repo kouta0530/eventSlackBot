@@ -10,7 +10,7 @@ from plugin import wordGet
 # Initialize a Flask app to host the events adapter
 app = Flask(__name__)
 
-"""
+
 #ここローカルでの実験用
 from os.path import join, dirname
 from dotenv import load_dotenv
@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path,encoding="utf-8_sig")
 #本番はherokuの環境変数
-"""
+
 
 from flask import request,Response
 """
@@ -54,15 +54,15 @@ def handle_message(event_data):
 
     if message.get("bot_id") is None:
         channel = message["channel"]
-        """
+
         wordlist = wordGet.mecab(message.get('text'))
-        pos_db = PosDB(host,dbname,users,password,port,url)
+        pos_db = PosDB(url)
         pos_db.set_cursor()
         for i in wordlist:
             sql_words = "insert into words (word) select '%s' where not exists (select * from words where word = '%s')" % (i,i)
             pos_db.insert_command(sql_words)
         pos_db.close()
-        """
+
         if message.get('text') == "おこのみ":
             sql_words = "select word from words"
             pos_db = PosDB(url)
@@ -200,15 +200,25 @@ def handle_message(event_data):
 # Example reaction emoji echo
 @slack_events_adapter.on("reaction_added")
 def reaction_added(event_data):
+    if request.headers.get("X-Slack-Retry-Num"):
+        return {"statusCode":200,"body":""}
+
     event = event_data["event"]
-    #emoji = event["reaction"]
+    user = event["user"]
     channel = event["item"]["channel"]
-    #eventitem = event["item"]
-    #text = ":%s:" % emoji
-    #if eventitem.get("bot_id") is None:
-        #slack_web_client.chat_postMessage(channel=channel, text=text)
-    slack_web_client.chat_postMessage(channel=channel, text=event_data)
-    return 0
+    ts = event["item"]["ts"]
+    history_top = slack_web_client.conversations_replies(ts= ts ,channel = channel)['messages'][0]["text"]
+
+    if history_top.startswith("<http"):
+        sql_news = "insert into news (news_address, users_id) select '%s','%s' where not exists (select * from news where news_address = '%s' and users_id = '%s')" %(history_top, user, history_top, user)
+        pos_db = PosDB(url)
+        pos_db.set_cursor()
+        pos_db.insert_command(sql_news)
+        pos_db.close()
+        botmessage = "お気に入りにしたよ"
+        return slack_web_client.chat_postMessage(channel=channel, text=botmessage)
+    else:
+        return slack_web_client.chat_postMessage(channel=channel, text="それはお気に入りにできないよ")
 
 # Error events
 @slack_events_adapter.on("error")
